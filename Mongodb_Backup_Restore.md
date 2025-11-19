@@ -68,5 +68,3 @@ mongorestore \
 * For full cluster backups or replica sets, `--uri` with the full connection string is recommended.
 
 ---
-
-This guide can be uploaded directly into GitHub as a Markdown file to standardize MongoDB backup and restore procedures across environments.
