@@ -8,7 +8,7 @@ This document provides generic syntax and examples for taking backups and restor
 
 Use `mongodump` when you need to export specific documents from a collection using a query filter.
 
-### **Generic Syntax**
+### **Syntax**
 
 ```bash
 mongodump \
@@ -39,7 +39,7 @@ mongodump \
 
 When the dump structure does not follow the standard MongoDB folder layout, you must explicitly mention the database and collection during restore.
 
-### **Generic Syntax**
+### **Syntax**
 
 ```bash
 mongorestore \
