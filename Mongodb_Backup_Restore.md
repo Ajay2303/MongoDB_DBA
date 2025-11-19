@@ -1,4 +1,4 @@
-# MongoDB Backup and Restore Guide
+# MongoDB Backup and Restore Steps
 
 This document provides generic syntax and examples for taking backups and restoring MongoDB collections using `mongodump` and `mongorestore`. The commands below are written in a generic format so they can be reused in different environments.
 
