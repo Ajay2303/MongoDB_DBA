@@ -1,4 +1,4 @@
-# MongoDB Production Upgrade – Plan of Action (PoA)
+# MongoDB Production ReplicaSet Minor Upgrade – Plan of Action (PoA)
 
 ## Overview
 This document provides a standardized and reusable Plan of Action (PoA) for performing MongoDB production replica set upgrades using a rolling upgrade strategy.
