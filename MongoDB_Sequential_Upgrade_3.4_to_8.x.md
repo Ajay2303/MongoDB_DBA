@@ -180,7 +180,7 @@ Proceeding without an OS upgrade may result in installation failure or unstable 
 
 ### Create Repository
 
-```bash
+```
 cat <<EOF > /etc/yum.repos.d/mongodb-org-5.0.repo
 [mongodb-org-5.0]
 name=MongoDB Repository
