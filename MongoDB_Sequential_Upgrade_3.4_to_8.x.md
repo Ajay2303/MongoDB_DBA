@@ -164,12 +164,40 @@ mongo --eval 'db.adminCommand({ setFeatureCompatibilityVersion: "4.4" })'
 
 ## MongoDB 5.0 and Above (Important Note)
 
-MongoDB versions 5.0 and above do not officially support CentOS 7. Upgrade the operating system to Rocky Linux, AlmaLinux, or Amazon Linux 2023 before proceeding further.
+MongoDB versions **5.0 and above do not support CentOS Linux 7**.  
+Before proceeding beyond MongoDB 4.4, the operating system **must be upgraded** to one of the following supported platforms:
+
+- Rocky Linux 8 / 9
+- AlmaLinux 8 / 9
+- Amazon Linux 2023
+- RHEL 8 / 9
+
+Proceeding without an OS upgrade may result in installation failure or unstable behavior.
 
 ---
 
-## MongoDB 4.4 to 5.0
+## MongoDB 4.4 to 5.0 Upgrade
 
+### Create Repository
+
+```bash
+cat <<EOF > /etc/yum.repos.d/mongodb-org-5.0.repo
+[mongodb-org-5.0]
+name=MongoDB Repository
+baseurl=https://repo.mongodb.org/yum/redhat/8/mongodb-org/5.0/x86_64/
+gpgcheck=1
+enabled=1
+gpgkey=https://www.mongodb.org/static/pgp/server-5.0.asc
+EOF
+```
+### Upgrade MongoDB Binaries
+```
+systemctl stop mongod
+yum install -y mongodb-org
+systemctl daemon-reload
+systemctl start mongod
+```
+### Set FCV
 ```
 db.adminCommand({ setFeatureCompatibilityVersion: "5.0" })
 ```
@@ -182,7 +210,25 @@ Key Enhancements:
 ---
 
 ## MongoDB 5.0 to 6.0
-
+### Create Repository
+```
+cat <<EOF > /etc/yum.repos.d/mongodb-org-6.0.repo
+[mongodb-org-6.0]
+name=MongoDB Repository
+baseurl=https://repo.mongodb.org/yum/redhat/8/mongodb-org/6.0/x86_64/
+gpgcheck=1
+enabled=1
+gpgkey=https://www.mongodb.org/static/pgp/server-6.0.asc
+EOF
+```
+### Upgrade MongoDB Binaries
+```
+systemctl stop mongod
+yum install -y mongodb-org
+systemctl daemon-reload
+systemctl start mongod
+```
+### Set FCV
 ```
 db.adminCommand({ setFeatureCompatibilityVersion: "6.0" })
 ```
@@ -195,7 +241,25 @@ Key Enhancements:
 ---
 
 ## MongoDB 6.0 to 7.0
-
+### Create Repository
+```
+cat <<EOF > /etc/yum.repos.d/mongodb-org-7.0.repo
+[mongodb-org-7.0]
+name=MongoDB Repository
+baseurl=https://repo.mongodb.org/yum/redhat/8/mongodb-org/7.0/x86_64/
+gpgcheck=1
+enabled=1
+gpgkey=https://www.mongodb.org/static/pgp/server-7.0.asc
+EOF
+```
+### Upgrade MongoDB Binaries
+```
+systemctl stop mongod
+yum install -y mongodb-org
+systemctl daemon-reload
+systemctl start mongod
+```
+### Set FCV
 ```
 db.adminCommand({ setFeatureCompatibilityVersion: "7.0" })
 ```
@@ -208,7 +272,25 @@ Key Enhancements:
 ---
 
 ## MongoDB 7.0 to 8.0
-
+### Create Repository
+```
+cat <<EOF > /etc/yum.repos.d/mongodb-org-8.0.repo
+[mongodb-org-8.0]
+name=MongoDB Repository
+baseurl=https://repo.mongodb.org/yum/redhat/9/mongodb-org/8.0/x86_64/
+gpgcheck=1
+enabled=1
+gpgkey=https://www.mongodb.org/static/pgp/server-8.0.asc
+EOF
+```
+### Upgrade MongoDB Binaries
+```
+systemctl stop mongod
+yum install -y mongodb-org
+systemctl daemon-reload
+systemctl start mongod
+```
+### Set FCV
 ```
 db.adminCommand({ setFeatureCompatibilityVersion: "8.0" })
 ```
