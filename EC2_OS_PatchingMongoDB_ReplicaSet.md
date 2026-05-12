@@ -1,0 +1,372 @@
+# R360 ICICI MongoDB EC2 OS Patching Activity Document
+
+| Item | Details |
+|---|---|
+| Application | ICICI Reward360 |
+| Environment | Production |
+| Activity Type | EC2 OS Patching – MongoDB Replica Set |
+
+---
+
+# 1. Objective
+
+The objective of this activity is to perform OS-level patching on EC2 instances hosting the MongoDB replica set while ensuring:
+
+- Database availability is maintained throughout the maintenance activity
+- Replica set health remains stable and synchronized
+- No data loss or replication inconsistency occurs
+- Application impact is minimized during failover/re-election events
+
+---
+
+# 2. MongoDB Replica Set Details
+
+| Role | IP Address |
+|---|---|
+| Primary | 172.16.3.86 |
+| Secondary | 172.16.3.17 |
+| Secondary | 172.16.3.148 |
+
+> **Note:**  
+> Actual PRIMARY node must always be validated using `rs.status()` before starting the activity.
+
+---
+
+# 3. Pre-Patching Validation Checks
+
+## 3.1 Validate MongoDB Service Status
+
+Run on all nodes:
+
+```bash
+systemctl status mongod
+ss -tulnp | grep mongod
+```
+
+### Ensure:
+- MongoDB service is active and running
+- MongoDB listener port is active
+
+---
+
+## 3.2 Validate Replica Set Health
+
+Connect to `mongosh` and execute:
+
+```javascript
+rs.status()
+```
+
+### Validation:
+- One member should be PRIMARY
+- Remaining members should be SECONDARY
+- No node should be in RECOVERING/UNKNOWN state
+
+### Optional replication lag validation:
+
+```javascript
+rs.printSecondaryReplicationInfo()
+```
+
+---
+
+## 3.3 Validate Backup Availability
+
+Verify latest successful:
+- MongoDB backup
+- EBS snapshot
+
+Validation to be confirmed with Infra/Rapyder Team.
+
+---
+
+## 3.4 Resource Validation
+
+Execute on all nodes:
+
+```bash
+df -h
+free -m
+top -bn1 | head -n 15
+```
+
+### Ensure:
+- Sufficient disk space
+- Stable CPU and memory utilization
+
+---
+
+## 3.5 Pause Scheduled Jobs
+
+Temporarily disable:
+- Cron jobs
+- Automated backup jobs
+- Maintenance scripts
+
+to avoid conflicts during reboot/failover activity.
+
+---
+
+# 4. Patching Execution Plan
+
+## Important Guidelines
+
+- Patching will be performed in rolling mode
+- Only one node will be rebooted at a time
+- Secondary nodes will be patched first
+- Primary node will be patched last
+- Replica set health validation is mandatory after each reboot
+
+---
+
+# 4.1 Secondary Node Patching – 172.16.3.17
+
+## DBA Activities Before Patching
+
+Validate replica set health:
+
+```javascript
+rs.status()
+```
+
+Gracefully stop MongoDB service:
+
+```bash
+sudo systemctl stop mongod
+```
+
+Validate MongoDB stopped successfully:
+
+```bash
+systemctl status mongod
+```
+
+---
+
+## Infra Activities
+
+- Perform OS patching
+- Reboot EC2 server
+
+---
+
+## Post-Reboot DBA Validation
+
+Ensure MongoDB service is started:
+
+```bash
+sudo systemctl start mongod
+```
+
+Validate service status:
+
+```bash
+systemctl status mongod
+```
+
+Validate replica synchronization:
+
+```javascript
+rs.status()
+```
+
+Ensure node rejoins as SECONDARY successfully.
+
+---
+
+# 4.2 Secondary Node Patching – 172.16.3.148
+
+## DBA Activities Before Patching
+
+Validate replica set health:
+
+```javascript
+rs.status()
+```
+
+Gracefully stop MongoDB service:
+
+```bash
+sudo systemctl stop mongod
+```
+
+Validate MongoDB stopped successfully:
+
+```bash
+systemctl status mongod
+```
+
+---
+
+## Infra Activities
+
+- Perform OS patching
+- Reboot EC2 server
+
+---
+
+## Post-Reboot DBA Validation
+
+Ensure MongoDB service is started:
+
+```bash
+sudo systemctl start mongod
+```
+
+Validate service status:
+
+```bash
+systemctl status mongod
+```
+
+Validate replica synchronization:
+
+```javascript
+rs.status()
+```
+
+Ensure node rejoins as SECONDARY successfully.
+
+---
+
+# 4.3 Primary Node Patching – 172.16.3.86
+
+## DBA Activities Before Patching
+
+Validate replica set health:
+
+```javascript
+rs.status()
+```
+
+Step down current PRIMARY:
+
+```javascript
+rs.stepDown()
+```
+
+Validate new PRIMARY election:
+
+```javascript
+rs.status()
+```
+
+Gracefully stop MongoDB service:
+
+```bash
+sudo systemctl stop mongod
+```
+
+Validate MongoDB stopped successfully:
+
+```bash
+systemctl status mongod
+```
+
+---
+
+## Infra Activities
+
+- Perform OS patching
+- Reboot EC2 server
+
+---
+
+## Post-Reboot DBA Validation
+
+Ensure MongoDB service is started:
+
+```bash
+sudo systemctl start mongod
+```
+
+Validate MongoDB service:
+
+```bash
+systemctl status mongod
+```
+
+Validate replica set health:
+
+```javascript
+rs.status()
+```
+
+### Ensure:
+- One PRIMARY exists
+- Remaining nodes are SECONDARY
+- Replication is healthy
+
+---
+
+# 5. Expected Behavior During rs.stepDown()
+
+When `rs.stepDown()` is executed:
+
+- Current PRIMARY immediately becomes SECONDARY
+- MongoDB automatically initiates election
+- One healthy SECONDARY becomes new PRIMARY
+- Application connections automatically fail over if replica set connection string is configured properly
+
+This process is expected behavior and prevents downtime during patching.
+
+---
+
+# 6. Post-Patching Validation
+
+## 6.1 MongoDB Service Validation
+
+```bash
+systemctl status mongod
+mongo --eval "db.serverStatus().uptime"
+```
+
+---
+
+## 6.2 Replica Set Validation
+
+```javascript
+rs.status()
+```
+
+### Validation:
+- One PRIMARY available
+- Remaining nodes in SECONDARY state
+- Replication lag minimal
+- No RECOVERING/UNKNOWN state
+
+---
+
+## 6.3 Application Validation
+
+Validate ICICI Reward application:
+
+- Read operations
+- Write operations
+- Connectivity checks
+- Application health checks
+
+---
+
+# 7. Rollback Plan
+
+In case of issues during activity:
+
+- Stop further patching immediately
+- Validate replica set health
+- Restore affected server if required
+- Restore from backup/EBS snapshot if necessary
+- Rebuild replica member if required
+- Inform stakeholders and share impact assessment
+
+---
+
+# 8. Activity Success Criteria
+
+The activity will be considered successful if:
+
+- All EC2 instances are patched successfully
+- MongoDB replica set is healthy
+- Replication is synchronized
+- Application validation completed successfully
+- No data inconsistency observed
